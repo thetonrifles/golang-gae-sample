@@ -2,18 +2,30 @@ package hw
 
 import (
     "time"
+    "net/http"
+    "google.golang.org/appengine"
+    "google.golang.org/appengine/datastore"
 )
 
 type Event struct {
     Title string 		`json:"title"`
-    Timestamp time.Time `json:"timestamp"` 
+    Timestamp time.Time `json:"timestamp"`
 }
 
-func GetEvents() []*Event {
-	events := make([]*Event, 0, 10)
-	now := time.Now()
-	events = append(events, &Event{Title:"first",Timestamp:now.Add(time.Hour)})
-	events = append(events, &Event{Title:"second",Timestamp:now.Add(2*time.Hour)})
-	events = append(events, &Event{Title:"third",Timestamp:now.Add(3*time.Hour)})
+func GetEvents(r *http.Request) []Event {
+  context := appengine.NewContext(r)
+  q := datastore.NewQuery("event")
+  var events []Event
+  q.GetAll(context, &events)
 	return events
+}
+
+func PutEvent(r *http.Request, event Event) (bool, error) {
+  context := appengine.NewContext(r)
+  _, err := datastore.Put(context, datastore.NewIncompleteKey(context, "event", nil), &event)
+  if err != nil {
+    return false, err
+  } else {
+    return true, nil
+  }
 }

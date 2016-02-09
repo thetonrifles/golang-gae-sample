@@ -35,6 +35,9 @@ func PostCalendarHandler(w http.ResponseWriter, r *http.Request) {
   var calendar Calendar
   err := decoder.Decode(&calendar)
   if err == nil {
+    if calendar.Events == nil {
+      calendar.Events = []*Event{}
+    }
     success, _ := PostCalendar(r, calendar)
     if success {
       json, _ := json.Marshal(calendar)

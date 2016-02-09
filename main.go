@@ -1,7 +1,6 @@
 package hw
 
 import (
-  "fmt"
   "net/http"
   "encoding/json"
   "github.com/gorilla/mux"
@@ -21,12 +20,20 @@ func init() {
 
 func GetCalendarHandler(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
-  calendar := GetCalendar(r, vars["id"])
-  if calendar != nil {
-    json, _ := json.Marshal(calendar)
-    fmt.Fprint(w, string(json))
+  owner := r.Header.Get("Authorization")
+  if owner == "" {
+    errorHandler(w, r, http.StatusUnauthorized)
   } else {
-    errorHandler(w, r, http.StatusNotFound)
+    calendar := GetCalendar(r, owner, vars["id"])
+    if calendar != nil {
+      if calendar.Events == nil {
+        calendar.Events = []*Event{}
+      }
+      encoder := json.NewEncoder(w)
+      encoder.Encode(calendar)
+    } else {
+      errorHandler(w, r, http.StatusNotFound)
+    }
   }
 }
 
@@ -40,8 +47,8 @@ func PostCalendarHandler(w http.ResponseWriter, r *http.Request) {
     }
     success, _ := PostCalendar(r, calendar)
     if success {
-      json, _ := json.Marshal(calendar)
-      fmt.Fprint(w, string(json))
+      encoder := json.NewEncoder(w)
+      encoder.Encode(calendar)
     } else {
       errorHandler(w, r, http.StatusInternalServerError)
     }
@@ -55,10 +62,12 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
   var message string
   if status == http.StatusNotFound {
     message = "not found"
+  } else if status == http.StatusUnauthorized {
+    message = "unauthorized"
   } else {
     message = "bad request"
   }
   response := HttpResponse{Status:"failure",Message:message}
-  json, _ := json.Marshal(response)
-  fmt.Fprint(w, string(json))
+  encoder := json.NewEncoder(w)
+  encoder.Encode(response)
 }

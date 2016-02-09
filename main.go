@@ -14,8 +14,25 @@ type HttpResponse struct {
 func init() {
   r := mux.NewRouter()
   r.HandleFunc("/calendar/{id}", GetCalendarHandler).Methods("GET")
+  r.HandleFunc("/calendars", GetCalendarsHandler).Methods("GET")
   r.HandleFunc("/calendar", PostCalendarHandler).Methods("POST")
   http.Handle("/", r)
+}
+
+func GetCalendarsHandler(w http.ResponseWriter, r *http.Request) {
+  owner := r.Header.Get("Authorization")
+  if owner == "" {
+    errorHandler(w, r, http.StatusUnauthorized)
+  } else {
+    calendars := GetCalendars(r, owner)
+    for _, calendar := range calendars {
+      if calendar.Events == nil {
+        calendar.Events = []*Event{}
+      }
+    }
+    encoder := json.NewEncoder(w)
+    encoder.Encode(calendars)
+  }
 }
 
 func GetCalendarHandler(w http.ResponseWriter, r *http.Request) {

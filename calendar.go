@@ -1,7 +1,7 @@
 package hw
 
 import (
-  "time"
+  "errors"
   "net/http"
   "hash/fnv"
   "google.golang.org/appengine"
@@ -15,8 +15,8 @@ type Calendar struct {
 }
 
 type Event struct {
-  Title string 		    `json:"title"`
-  Timestamp time.Time `json:"timestamp"`
+  Title string 		`json:"title"`
+  Timestamp int64 `json:"timestamp"`
 }
 
 func GetCalendars(r *http.Request, owner string) []*Calendar {
@@ -45,15 +45,34 @@ func PostCalendar(r *http.Request, calendar Calendar) (bool, error) {
   key := hash(calendar.Owner + calendar.Id)
   calendarKey := datastore.NewKey(context, "calendar", key, 0, nil)
   err := datastore.Get(context, calendarKey, &calendar)
-  if err == nil {
-    _, err := datastore.Put(context, datastore.NewKey(context, "calendar", key, 0, nil), &calendar)
+  if err != nil {
+    _, err := datastore.Put(context, calendarKey, &calendar)
     if err != nil {
       return false, err
     } else {
       return true, nil
     }
   } else {
-    return false, err
+    return false, errors.New("calendar already exists")
+  }
+}
+
+func PostEvent(r *http.Request, calendarId string, owner string, event Event) (bool, error) {
+  context := appengine.NewContext(r)
+  key := hash(owner + calendarId)
+  calendarKey := datastore.NewKey(context, "calendar", key, 0, nil)
+  var calendar Calendar
+  err := datastore.Get(context, calendarKey, &calendar)
+  if err != nil {
+    return false, errors.New("calendar doesn't exists")
+  } else {
+    calendar.Events = append(calendar.Events, &event)
+    _, err := datastore.Put(context, calendarKey, &calendar)
+    if err != nil {
+      return false, err
+    } else {
+      return true, nil
+    }
   }
 }
 
@@ -62,14 +81,3 @@ func hash(s string) string {
   h.Write([]byte(s))
   return string(h.Sum32())
 }
-/*
-func PutEvent(r *http.Request, calendarId string, event Event) (bool, error) {
-  context := appengine.NewContext(r)
-  _, err := datastore.Put(context, datastore.NewIncompleteKey(context, "event", nil), &event)
-  if err != nil {
-    return false, err
-  } else {
-    return true, nil
-  }
-}
-*/

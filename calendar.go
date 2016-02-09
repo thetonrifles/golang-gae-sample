@@ -11,7 +11,7 @@ import (
 type Calendar struct {
   Id string       `json:"id"`
   Owner string    `json:"owner"`
-  Events []*Event `json:"events"`
+  Events []Event `json:"events"`
 }
 
 type Event struct {
@@ -66,7 +66,7 @@ func PostEvent(r *http.Request, calendarId string, owner string, event Event) (b
   if err != nil {
     return false, errors.New("calendar doesn't exists")
   } else {
-    calendar.Events = append(calendar.Events, &event)
+    calendar.Events = append(calendar.Events, event)
     _, err := datastore.Put(context, calendarKey, &calendar)
     if err != nil {
       return false, err

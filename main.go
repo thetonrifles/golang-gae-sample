@@ -29,7 +29,7 @@ func GetCalendarsHandler(w http.ResponseWriter, r *http.Request) {
     calendars := GetCalendars(r, owner)
     for _, calendar := range calendars {
       if calendar.Events == nil {
-        calendar.Events = []*Event{}
+        calendar.Events = []Event{}
       }
     }
     encoder := json.NewEncoder(w)
@@ -46,7 +46,7 @@ func GetCalendarHandler(w http.ResponseWriter, r *http.Request) {
     calendar := GetCalendar(r, owner, vars["id"])
     if calendar != nil {
       if calendar.Events == nil {
-        calendar.Events = []*Event{}
+        calendar.Events = []Event{}
       }
       encoder := json.NewEncoder(w)
       encoder.Encode(calendar)
@@ -67,7 +67,7 @@ func PostCalendarHandler(w http.ResponseWriter, r *http.Request) {
     if err == nil {
       calendar.Owner = owner
       if calendar.Events == nil {
-        calendar.Events = []*Event{}
+        calendar.Events = []Event{}
       }
       success, err := PostCalendar(r, calendar)
       if success {

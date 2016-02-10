@@ -24,8 +24,8 @@ func GetCalendars(r *http.Request, owner string) []*Calendar {
   q := datastore.NewQuery("calendar").Filter("Owner =", owner)
   var calendars []*Calendar
   _, err := q.GetAll(context, &calendars)
-  if err==nil {
-	  return calendars
+  if err==nil && calendars!=nil {
+    return calendars
   } else {
     return []*Calendar{}
   }

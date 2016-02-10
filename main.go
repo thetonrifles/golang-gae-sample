@@ -29,8 +29,7 @@ func GetCalendarsHandler(w http.ResponseWriter, r *http.Request) {
       calendar.Events = []Event{}
     }
   }
-  encoder := json.NewEncoder(w)
-  encoder.Encode(calendars)
+  responseHandler(w, calendars)
 }
 
 func GetCalendarHandler(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +40,7 @@ func GetCalendarHandler(w http.ResponseWriter, r *http.Request) {
     if calendar.Events == nil {
       calendar.Events = []Event{}
     }
-    encoder := json.NewEncoder(w)
-    encoder.Encode(calendar)
+    responseHandler(w, calendar)
   } else {
     errorHandler(w, r, http.StatusNotFound, "not found")
   }
@@ -60,8 +58,7 @@ func PostCalendarHandler(w http.ResponseWriter, r *http.Request) {
     }
     success, err := PostCalendar(r, calendar)
     if success {
-      encoder := json.NewEncoder(w)
-      encoder.Encode(calendar)
+      responseHandler(w, calendar)
     } else {
       errorHandler(w, r, http.StatusInternalServerError, fmt.Sprintf("%v", err))
     }
@@ -79,8 +76,7 @@ func PostEventHandler(w http.ResponseWriter, r *http.Request) {
   if err == nil {
     success, err := PostEvent(r, vars["calendarId"], owner, event)
     if success {
-      encoder := json.NewEncoder(w)
-      encoder.Encode(event)
+      responseHandler(w, event)
     } else {
       errorHandler(w, r, http.StatusInternalServerError, fmt.Sprintf("%v", err))
     }
@@ -100,7 +96,14 @@ func auth(fn http.HandlerFunc) http.HandlerFunc {
   }
 }
 
+func responseHandler(w http.ResponseWriter, v interface{}) {
+  w.Header().Set("Content-Type", "application/json")
+  encoder := json.NewEncoder(w)
+  encoder.Encode(v)
+}
+
 func errorHandler(w http.ResponseWriter, r *http.Request, status int, message string) {
+  w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(status)
   response := HttpResponse{Status:"failure",Message:message}
   encoder := json.NewEncoder(w)

@@ -1,9 +1,10 @@
 package hw
 
 import (
+  "fmt"
   "errors"
   "net/http"
-  "hash/fnv"
+  "crypto/md5"
   "google.golang.org/appengine"
   "google.golang.org/appengine/datastore"
 )
@@ -77,7 +78,6 @@ func PostEvent(r *http.Request, calendarId string, owner string, event Event) (b
 }
 
 func hash(s string) string {
-  h := fnv.New32a()
-  h.Write([]byte(s))
-  return string(h.Sum32())
+  data := []byte(s)
+  return fmt.Sprintf("%x", md5.Sum(data))
 }

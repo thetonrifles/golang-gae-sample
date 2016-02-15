@@ -1,2 +1,0 @@
-goapp get google.golang.org/appengine
-goapp get github.com/gorilla/mux
